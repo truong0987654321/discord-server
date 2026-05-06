@@ -92,9 +92,9 @@ func inject(d *dataSources, cfg config.Config) (*gin.Engine, error) {
 
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	store.Options(sessions.Options{
-		Domain:   cfg.Domain,
-		MaxAge:   60 * 60 * 24 * 7, // 7 days
-		Secure:   gin.Mode() == gin.ReleaseMode,
+		Domain:   "",
+		MaxAge:   60 * 60 * 24 * 7,
+		Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
 		SameSite: http.SameSiteNoneMode,
