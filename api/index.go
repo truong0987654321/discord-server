@@ -40,7 +40,7 @@ func initDS(ctx context.Context, cfg config.Config) (*dataSources, error) {
 	log.Printf("Initializing data sources\n")
 
 	log.Printf("Connecting to Postgresql\n")
-
+	log.Println("=== NEW CODE VERSION ===")
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseUrl), &gorm.Config{
 		PrepareStmt: false,
 	})
@@ -48,11 +48,11 @@ func initDS(ctx context.Context, cfg config.Config) (*dataSources, error) {
 		return nil, fmt.Errorf("Error opening database: %w", err)
 	}
 
-	if gin.Mode() != gin.ReleaseMode {
-		if err = db.AutoMigrate(&model.User{}); err != nil {
-			return nil, fmt.Errorf("Error migrating models: %w", err)
-		}
-	}
+	// if gin.Mode() != gin.ReleaseMode {
+	// 	if err = db.AutoMigrate(&model.User{}); err != nil {
+	// 		return nil, fmt.Errorf("Error migrating models: %w", err)
+	// 	}
+	// }
 	ik := imagekit.NewClient(
 		option.WithPrivateKey(cfg.ImageKitPrivateKey),
 		option.WithHeader("X-ImageKit-PublicKey", cfg.ImageKitPublicKey),
