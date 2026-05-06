@@ -41,15 +41,17 @@ func initDS(ctx context.Context, cfg config.Config) (*dataSources, error) {
 
 	log.Printf("Connecting to Postgresql\n")
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseUrl))
+	db, err := gorm.Open(postgres.Open(cfg.DatabaseUrl), &gorm.Config{
+		PrepareStmt: false,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("Error opening database: %w", err)
 	}
 
-	if err = db.AutoMigrate(
-		&model.User{},
-	); err != nil {
-		return nil, fmt.Errorf("Error migrating models: %w", err)
+	if gin.Mode() != gin.ReleaseMode {
+		if err = db.AutoMigrate(&model.User{}); err != nil {
+			return nil, fmt.Errorf("Error migrating models: %w", err)
+		}
 	}
 	ik := imagekit.NewClient(
 		option.WithPrivateKey(cfg.ImageKitPrivateKey),
@@ -82,7 +84,8 @@ func inject(d *dataSources, cfg config.Config) (*gin.Engine, error) {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{cfg.CorsOrigin},
 		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization"},
 	})
 
 	router.Use(c)
@@ -94,7 +97,7 @@ func inject(d *dataSources, cfg config.Config) (*gin.Engine, error) {
 		Secure:   gin.Mode() == gin.ReleaseMode,
 		HttpOnly: true,
 		Path:     "/",
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 	router.Use(sessions.Sessions(model.CookieName, store))
 	rate := limiter.Rate{
